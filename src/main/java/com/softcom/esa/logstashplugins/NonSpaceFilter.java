@@ -20,13 +20,16 @@ public class NonSpaceFilter implements Filter {
     private static final PluginConfigSpec<String> SOURCE_CONFIG =
             PluginConfigSpec.stringSetting("source", "message");
     private static final PluginConfigSpec<Boolean> DISCARD_CONFIG =
-            PluginConfigSpec.booleanSetting("discardSame", true);
+            PluginConfigSpec.booleanSetting("discard_same", true);
     private static final PluginConfigSpec<Boolean> HI_FREQ_CONFIG =
-            PluginConfigSpec.booleanSetting("discardHiFrequentLogMessage", true);
+            PluginConfigSpec.booleanSetting("discard_hi_frequent_log_message", true);
+    private static final PluginConfigSpec<Boolean> LOG_MESSAGES =
+            PluginConfigSpec.booleanSetting("log_messages", false);
     private static final int TIME_FIELD_START_INDEX = 12;
     private static final CharSequence HI_FREQ_TEXT = "HI FREQUENT LOG DETECTED";
     private final boolean discardHiFreqLog;
     private final boolean discardSame;
+    private final boolean logMessages;
 
     private String id;
     private String sourceField;
@@ -43,6 +46,7 @@ public class NonSpaceFilter implements Filter {
         this.sourceField = config.get(SOURCE_CONFIG);
         this.discardHiFreqLog = config.get(HI_FREQ_CONFIG);
         this.discardSame = config.get(DISCARD_CONFIG);
+        this.logMessages = config.get(LOG_MESSAGES);
     }
 
     @Override
@@ -57,7 +61,8 @@ public class NonSpaceFilter implements Filter {
                 if (message instanceof String && previousMessage instanceof String) {
                     // Discard HI-FREQ messages
                     if (discardHiFreqLog && ((String) message).contains(HI_FREQ_TEXT)) {
-                        System.out.println("Dropping -" + HI_FREQ_TEXT + "- message");
+                        if (logMessages)
+                            System.out.println("Dropping -" + HI_FREQ_TEXT + "- message: " + message);
                         iterator.remove();
                         previousEvent = e;
                         continue;
@@ -68,7 +73,8 @@ public class NonSpaceFilter implements Filter {
                                     ((String) previousMessage).substring(TIME_FIELD_START_INDEX)
                             )
                     ) {
-                        System.out.println("Dropping - SIMILAR - message");
+                        if (logMessages)
+                            System.out.println("Dropping - SIMILAR - message: " + message);
                         iterator.remove();
                         previousEvent = e;
                         continue;
@@ -83,7 +89,8 @@ public class NonSpaceFilter implements Filter {
                 if (message instanceof String) {
                     // Discard HI-FREQ messages
                     if (discardHiFreqLog && ((String) message).contains(HI_FREQ_TEXT)) {
-                        System.out.println("Dropping -" + HI_FREQ_TEXT + "- message");
+                        if (logMessages)
+                            System.out.println("Dropping -" + HI_FREQ_TEXT + "- message: " + message);
                         iterator.remove();
                         previousEvent = null;
                     }
@@ -100,6 +107,7 @@ public class NonSpaceFilter implements Filter {
         configSchema.add(SOURCE_CONFIG);
         configSchema.add(DISCARD_CONFIG);
         configSchema.add(HI_FREQ_CONFIG);
+        configSchema.add(LOG_MESSAGES);
         return configSchema;
     }
 
